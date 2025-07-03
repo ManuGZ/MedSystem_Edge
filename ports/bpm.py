@@ -7,7 +7,6 @@ import statistics
 
 class BPMProcessor:
     def __init__(self):
-        self.backend_url = "http://localhost:8080/api/bpm/receive"
         self.bpm_data = deque(
             maxlen=10
         )  # Guardamos los últimos 10 datos de BPM para análisis en tiempo real
@@ -38,9 +37,6 @@ class BPMProcessor:
         # Guardar los datos procesados
         self.processed_bpm.append(result)
 
-        # Enviar los datos procesados al backend Spring Boot (opcional)
-        await self.send_data_to_spring_backend(result)
-
         return result
 
     def detect_anomaly(self, bpm_value: float):
@@ -48,20 +44,6 @@ class BPMProcessor:
         if bpm_value > 150:
             return True
         return False
-
-    async def send_data_to_spring_backend(self, data: dict):
-        """Enviar los datos procesados al backend de Spring Boot"""
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(self.backend_url, json=data)
-                response.raise_for_status()  # Lanza un error si la respuesta no es exitosa
-                return response.json()
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(status_code=500, detail=f"Backend error: {e}")
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Error sending data to Spring Boot: {e}"
-            )
 
     def get_processed_bpm_data(self):
         """Obtener los datos BPM procesados"""
